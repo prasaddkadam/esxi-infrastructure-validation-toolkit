@@ -7,7 +7,8 @@
 
 param(
     [Parameter(Mandatory = $true)]
-    [string]$ESXiServer
+    [string]$ESXiServer,
+    [string]$OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -50,7 +51,7 @@ $Inventory | Format-Table -AutoSize
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 $WorkspaceRoot = Split-Path $RepoRoot -Parent
 
-$OutputDir = Join-Path $WorkspaceRoot 'output'
+$OutputDir = if ($OutputDirectory) { $OutputDirectory } else { Join-Path $WorkspaceRoot 'output' }
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
 $OutputPath = Join-Path $OutputDir 'VM-Inventory.csv'
