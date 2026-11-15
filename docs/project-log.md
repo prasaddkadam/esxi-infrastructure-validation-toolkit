@@ -8,10 +8,10 @@ Establish the physical VMware host and create a stable baseline before deploying
 
 ### Platform
 
-- Intel Core i5-13500T
-- 32 GB RAM
-- 256 GB NVMe SSD
-- Intel I219-LM 1 GbE
+- hybrid-core x86 processor
+- Lab RAM (capacity withheld)
+- NVMe (capacity withheld) SSD
+- onboard Gigabit Ethernet NIC 1 GbE
 - VMware ESXi 8
 
 ### Implemented
@@ -79,7 +79,7 @@ deployment of the first Linux virtual machine.
 
 ### Remediation
 
-Upgraded HP Pro Mini 400 G9 U23 BIOS from 02.15.12 to 02.23.00.
+Upgraded dedicated lab host [firmware family redacted] BIOS from [redacted] to [redacted].
 
 Saved ESXi TPM encryption recovery material and generated
 a host configuration backup before performing firmware maintenance.
