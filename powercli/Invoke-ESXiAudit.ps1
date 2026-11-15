@@ -34,8 +34,14 @@ New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 # A stable, non-identifying directory key prevents NIC snapshots from
 # different ESXi hosts being compared with one another.
 $ServerBytes = [Text.Encoding]::UTF8.GetBytes($ESXiServer.Trim().ToLowerInvariant())
-$ServerHash = [Security.Cryptography.SHA256]::HashData($ServerBytes)
-$HostKey = [Convert]::ToHexString($ServerHash).Substring(0, 16).ToLowerInvariant()
+$Hasher = [Security.Cryptography.SHA256]::Create()
+try {
+    $ServerHash = $Hasher.ComputeHash($ServerBytes)
+}
+finally {
+    $Hasher.Dispose()
+}
+$HostKey = ([BitConverter]::ToString($ServerHash) -replace '-', '').Substring(0, 16).ToLowerInvariant()
 
 $HostDirectory = Join-Path (Join-Path $OutputDirectory 'history') $HostKey
 $LastNICFile = Join-Path $HostDirectory 'latest-NIC.csv'
@@ -163,6 +169,6 @@ try {
     Write-Host "Output directory: $RunDirectory"
 }
 catch {
-    Write-Error "Audit did not complete successfully. Partial outputs (if any) are in $RunDirectory. $($_.Exception.Message)"
+    Write-Warning "Audit did not complete successfully. Partial outputs (if any) are in $RunDirectory. $($_.Exception.Message)"
     throw
 }
