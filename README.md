@@ -1,341 +1,102 @@
-# VMware Automation & Infrastructure-as-Code Lab
+# VMware ESXi Infrastructure Health & Validation Toolkit
 
-A practical VMware infrastructure automation project progressing from manual ESXi administration to PowerCLI, Terraform, configuration management, and repeatable Infrastructure-as-Code deployment.
+A **read-only ESXi infrastructure audit and diagnostics project** built using PowerShell 7 and VMware PowerCLI. It captures VM inventory, ESXi host utilisation, datastore health, and physical NIC counters; compares network snapshots; validates a lab configuration baseline; and produces consolidated CSV evidence.
 
-The project is intentionally built in stages: infrastructure components are first understood and configured manually, then progressively automated rather than building separate manual and automated labs.
+**Scope:** Audit, diagnostics, configuration validation and operational reporting. This repository does **not** implement Terraform, automated VM provisioning, or guest configuration management.
 
----
+## Implemented tools
 
-## Project Goal
-
-Build a small but realistic VMware environment and evolve it through:
-
-```text
-Manual Infrastructure
-        ↓
-PowerCLI / PowerShell
-        ↓
-VMware API Automation
-        ↓
-Terraform / Infrastructure as Code
-        ↓
-Standardised VM Deployment
-        ↓
-Configuration Management
-        ↓
-Containerised Automation Tooling
-        ↓
-End-to-End Deployment
-```
-
-The objective is not simply to install multiple tools. Each automation technology is introduced only after understanding the infrastructure component it will manage.
-
----
-
-## Lab Architecture
-
-### Current Architecture
-
-```text
-              Management Workstation
-                        │
-          ┌─────────────┼──────────────┐
-          │             │              │
-      PowerShell     PowerCLI      Terraform
-          │             │              │
-          └─────────────┼──────────────┘
-                        │
-                 VMware API / SSH
-                        │
-                  Home Network
-                        │
-                        ▼
-                      HP PC
-                        │
-                   VMware ESXi
-                        │
-               ┌────────┴────────┐
-               │                 │
-          VM Network       Management
-                                  │
-                                 vmk0
-```
-
-### Target Automation Architecture
-
-```text
-Git Repository
-      │
-      ▼
-Automation Environment
-      │
-      ├── Terraform
-      ├── PowerCLI
-      ├── Ansible
-      └── Supporting Scripts
-              │
-              ▼
-          VMware API
-              │
-              ▼
-        ESXi / vCenter
-              │
-              ▼
-       Standardised VM
-              │
-              ▼
-      Guest Configuration
-              │
-              ▼
-      Service Deployment
-              │
-              ▼
-         Verification
-```
-
----
-
-## Hardware
-
-### VMware Host
-
-| Component | Specification |
-|---|---|
-| Platform | HP PC |
-| CPU | Intel Core i5-13500T |
-| CPU Architecture | 14 cores / 20 threads, hybrid P-core/E-core |
-| Memory | 32 GB DDR4 |
-| Storage | 256 GB Samsung NVMe SSD |
-| Network Adapter | Intel I219-LM 1 GbE |
-| Hypervisor | VMware ESXi 8 |
-
-### Management Workstation
-
-A separate personal workstation is used for:
-
-- PowerShell
-- VMware PowerCLI
-- Terraform
-- Git
-- VS Code
-- SSH
-- Docker
-- Ansible
-- Packer
-
-This keeps automation tooling separate from the ESXi host and preserves host resources for virtual machines.
-
----
-
-## Project Stages
-
-The detailed learning roadmap is condensed into seven implementation stages for this repository.
-
-| Stage | Focus | Status |
+| Script | Function | Verified evidence |
 |---|---|---|
-| **1. Platform Foundation** | Hardware, ESXi, networking, storage and VMware fundamentals | ✅ Complete |
-| **2. Manual Infrastructure Baseline** | First VM and manual deployment workflow | ✅ First VM verified |
-| **3. PowerCLI & API Automation** | VMware automation using PowerShell and PowerCLI | Planned |
-| **4. Infrastructure as Code** | Terraform and declarative infrastructure provisioning | Planned |
-| **5. Standardised Deployment** | Templates, unattended installation and Packer | Planned |
-| **6. Configuration Management** | PowerShell, Ansible and guest configuration | Planned |
-| **7. End-to-End Automation** | Containerised tooling and repeatable infrastructure deployment | Planned |
+| [01-Get-VMInventory.ps1](powercli/01-Get-VMInventory.ps1) | Export VM power, compute, disk and NIC inventory | CSV produced and re-imported |
+| [02-Get-ESXiHostHealth.ps1](powercli/02-Get-ESXiHostHealth.ps1) | Sample host CPU/RAM, datastore and physical NIC counters | Timestamped CSV reports |
+| [03-Compare-NICHealth.ps1](powercli/03-Compare-NICHealth.ps1) | Compare NIC snapshots and identify error-counter increases | Detected a receive error increase |
+| [04-Test-LabBaseline.ps1](powercli/04-Test-LabBaseline.ps1) | Compare ESXi, networking, storage and VM settings against the lab baseline | 20/20 checks passed |
+| [05-Get-LabReport.ps1](powercli/05-Get-LabReport.ps1) | Consolidate latest available health and baseline data | Reported a network warning alongside passing checks |
 
----
+Scripts are individually tested. A one-command runner, input-hardening and example evidence are planned for the final release; they have **not** been implemented yet. This is periodic snapshot analysis, **not** live monitoring.
 
-## Stage 1 — Platform Foundation
-
-The initial VMware platform has been established and validated.
-
-Completed work includes:
-
-- Assessed physical hardware for ESXi suitability
-- Enabled Intel VT-x
-- Enabled Intel VT-d
-- Installed VMware ESXi directly on the physical Mini PC
-- Configured ESXi hostname and FQDN
-- Configured management networking
-- Created a DHCP reservation for predictable ESXi management addressing
-- Verified gateway and external network connectivity
-- Configured DNS
-- Configured and verified NTP synchronisation
-- Validated VMFS storage
-- Examined VMware Standard Switch networking
-- Identified the management VMkernel interface
-- Enabled SSH for administrative testing
-
-Detailed implementation notes are maintained under [`docs/`](docs/).
-
----
-
-## Current VMware Network
+## Architecture
 
 ```text
-Physical Network
-       │
-     vmnic0
-       │
-     vSwitch0
-       │
- ┌─────┴─────────────┐
- │                   │
-Management        VM Network
-Network
- │
-vmk0
- │
-ESXi Management
+Personal management workstation
+   PowerShell 7 + PowerCLI + Git
+                |
+         Read-only vSphere API
+                |
+        Standalone VMware ESXi
+                |
+    +-----------+-----------+
+    |           |           |
+  Host/VM    VMFS storage  vSwitch/uplink
+ inventory    monitoring   NIC counters
+    +-----------+-----------+
+                |
+       Timestamped CSV reports
+                |
+     Delta / baseline validation
+                |
+       Consolidated audit report
 ```
 
-### Current Components
+Physical host manufacturer/model, hardware identifiers, exact capacity, management addressing and private naming are intentionally omitted from public documentation. The lab uses a small dedicated x86 host with a hybrid-core CPU and an onboard Ethernet adapter.
 
-| Component | Purpose |
-|---|---|
-| `vmnic0` | Physical Intel Ethernet adapter |
-| `vSwitch0` | VMware Standard Virtual Switch |
-| `Management Network` | Port group carrying ESXi management traffic |
-| `VM Network` | Port group for virtual-machine network connectivity |
-| `vmk0` | ESXi management VMkernel adapter |
-| `datastore1` | VMFS datastore for VM files |
+## Run the tools
 
----
+### Prerequisites
 
-## Storage Architecture
+- PowerShell 7 and VMware PowerCLI on a management workstation
+- A reachable standalone ESXi host and permission for the required read-only API queries
+- An output directory writable by the PowerShell user
+- Review script prerequisites before running: baseline expectations are currently written for the example lab VM `LINUX01`
 
-The host currently uses a single NVMe SSD.
+The host address is provided **at runtime** and is not stored in the source files:
 
-```text
-NVMe SSD
-   │
-   ├── ESXi System Storage
-   │
-   └── VMFS-6
-          │
-          └── datastore1
+```powershell
+$ESXiServer = Read-Host 'Enter the ESXi management hostname or IP'
+Connect-VIServer -Server $ESXiServer
+
+./powercli/01-Get-VMInventory.ps1 -ESXiServer $ESXiServer
+./powercli/02-Get-ESXiHostHealth.ps1 -ESXiServer $ESXiServer
+
+# Take another NIC snapshot after a measurement interval.
+./powercli/02-Get-ESXiHostHealth.ps1 -ESXiServer $ESXiServer
+./powercli/03-Compare-NICHealth.ps1
+
+./powercli/04-Test-LabBaseline.ps1 -ESXiServer $ESXiServer
+./powercli/05-Get-LabReport.ps1
 ```
 
-The lab therefore follows resource-conscious storage practices:
+Scripts write CSVs into the `output/` folder alongside the local repository workspace (not committed). Use measured timestamps when interpreting a report: the consolidated script does not yet enforce snapshot age.
 
-- Thin-provisioned virtual disks
-- Small guest OS disks
-- Minimal unnecessary snapshots
-- Temporary VMs where appropriate
-- Powered-off VMs when not required
-- Reusable templates later in the project
+## Real diagnostic investigation: INC-001
 
----
+The ESXi host experienced intermittent management-transfer failures, received-packet errors and link events. The investigation included physical-path isolation, ESXi NIC counters, kernel logs, a firmware maintenance change and a cross-operating-system comparison using a Linux live environment.
 
-## Hardware Compatibility Finding
+Under Linux, an `iperf3` test measured approximately **749 Mbit/s** over 30 seconds without corresponding NIC errors. ESXi continued to exhibit intermittent receive anomalies. The precise fault mechanism and a durable fix have **not** been established.
 
-The Intel Core i5-13500T uses Intel's hybrid Performance-core and Efficiency-core architecture.
+In a subsequent comparison, the PowerCLI scripts identified **37 additional receive-length errors** and **37 additional receive-missed errors** while other infrastructure checks passed. The consolidated status was appropriately `WARNING`.
 
-During ESXi installation, the host encountered a CPU uniformity PSOD containing:
+[Read the incident investigation](docs/incidents/INC-001-esxi-network-instability.md).
 
-```text
-Fatal CPU mismatch on feature "Cores per package"
-```
+## Licensing boundary
 
-The issue was investigated and resolved using the ESXi kernel configuration:
+The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have been verified, but a test `Start-VM` operation was rejected with a license/API restriction. **VM creation, power operations and Terraform provisioning through the vSphere API are not claimed in this project.** Virtual machines were originally installed manually using the ESXi Host Client.
 
-```text
-cpuUniformityHardCheckPanic=FALSE
-```
+[See the architecture decisions](docs/design-decisions.md).
 
-The setting was subsequently made persistent and verified.
-
-This became the project's first documented infrastructure troubleshooting case.
-
-See:
-
-[`docs/troubleshooting.md`](docs/troubleshooting.md)
-
-### ESXi Network Compatibility Investigation
-
-During preparation for the first VM deployment, the Intel I219-LM
-management NIC experienced intermittent connectivity failures under load.
-
-The investigation included ESXi NIC diagnostics, physical network
-isolation, and comparative testing with Ubuntu Live.
-
-Following an HP U23 BIOS update, the previously unsuccessful
-file transfer tests completed, but network interruptions recurred during
-the first Ubuntu VM installation. PCI Express Power Management was subsequently
-disabled for evaluation; permanent resolution remains unconfirmed.
-
-[Read INC-001 — ESXi Network Instability](docs/incidents/INC-001-esxi-network-instability.md)
-
----
-
-## Design Principles
-
-### Understand Before Automating
-
-Infrastructure components are first understood manually before being automated.
-
-```text
-Understand
-   ↓
-Configure Manually
-   ↓
-Identify Repetitive Operations
-   ↓
-Automate
-```
-
-### Avoid Rebuilding the Lab
-
-The project does not create one large manual environment and then destroy it simply to reproduce the same infrastructure through automation.
-
-The same infrastructure is progressively transitioned from:
-
-```text
-Manual Administration
-        ↓
-Scripting
-        ↓
-API Automation
-        ↓
-Infrastructure as Code
-```
-
-### Separate Provisioning from Configuration
-
-Infrastructure provisioning and guest operating-system configuration are treated as separate concerns.
-
-```text
-Infrastructure Provisioning
-        │
-        ├── PowerCLI
-        └── Terraform
-```
-
-```text
-Guest Configuration
-        │
-        ├── PowerShell
-        ├── cloud-init
-        └── Ansible
-```
-
-### Resource-Conscious Design
-
-The project deliberately uses modest hardware rather than simulating an unnecessarily large enterprise environment.
-
-Resource allocation, storage consumption and VM lifecycle are therefore treated as architectural considerations rather than afterthoughts.
-
----
-
-## Repository Structure
-
-The repository grows progressively as technologies are introduced.
-
-Current structure:
+## Repository
 
 ```text
 .
 ├── README.md
 ├── .gitignore
-│
+├── powercli/
+│   ├── 01-Get-VMInventory.ps1
+│   ├── 02-Get-ESXiHostHealth.ps1
+│   ├── 03-Compare-NICHealth.ps1
+│   ├── 04-Test-LabBaseline.ps1
+│   └── 05-Get-LabReport.ps1
 └── docs/
     ├── design-decisions.md
     ├── project-log.md
@@ -347,145 +108,19 @@ Current structure:
         └── 02-manual-infrastructure-baseline.md
 ```
 
-Future directories will be added as their corresponding technologies are introduced:
+## Engineering records
 
-```text
-powercli/
-terraform/
-ansible/
-packer/
-docker/
-scripts/
-diagrams/
-```
+- [Design decisions](docs/design-decisions.md)
+- [Project log](docs/project-log.md)
+- [NIC compatibility investigation](docs/incidents/INC-001-esxi-network-instability.md)
+- [Platform foundation](docs/stages/01-platform-foundation.md)
+- [Manual VM baseline](docs/stages/02-manual-infrastructure-baseline.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
-This avoids adding placeholder automation that has not actually been implemented.
+## Finalisation scope
 
----
+Remaining work: a parameterised audit runner, robust handling of missing/stale data, reproducible checks, sanitised sample output and an operating guide. No additional hypervisor, VM deployment framework or commercial licensing is required for the planned read-only deliverable.
 
-## Documentation
+## Privacy and security
 
-The project maintains several types of engineering documentation.
-
-### Project Log
-
-[`docs/project-log.md`](docs/project-log.md)
-
-Chronological record of significant implementation milestones.
-
-### Design Decisions
-
-[`docs/design-decisions.md`](docs/design-decisions.md)
-
-Records architectural choices and the reasoning behind them.
-
-### Troubleshooting
-
-[`docs/troubleshooting.md`](docs/troubleshooting.md)
-
-Records significant technical failures using:
-
-```text
-Symptom
-   ↓
-Evidence
-   ↓
-Root Cause
-   ↓
-Resolution
-   ↓
-Verification
-   ↓
-Lesson Learned
-```
-
-### Stage Documentation
-
-[`docs/stages/`](docs/stages/)
-
-Detailed technical documentation for each major implementation stage.
-
----
-
-## Security
-
-Sensitive information is intentionally excluded from the repository.
-
-The repository does not contain:
-
-- Passwords
-- ESXi root credentials
-- API credentials
-- SSH private keys
-- Terraform secrets
-- `.tfvars` containing credentials
-- Private certificates
-- Employer infrastructure
-- Production configuration
-- Company scripts
-
-The repository represents an independent personal infrastructure automation project.
-
----
-
-## Technologies
-
-Technologies introduced throughout the project will include:
-
-- VMware ESXi
-- VMware PowerCLI
-- PowerShell
-- VMware APIs
-- Terraform
-- Git
-- Windows Server
-- Linux
-- Ansible
-- Packer
-- Docker
-- Infrastructure as Code
-- Configuration Management
-
----
-
-## Current Status
-
-### ✅ Stage 1 — Platform Foundation
-
-Complete.
-
-The ESXi host is installed, networked, time-synchronised, remotely manageable and validated.
-
-### ✅ Stage 2 — Manual Infrastructure Baseline (First VM)
-
-`LINUX01` is running Ubuntu Server 24.04.5 LTS with 2 vCPU, 2 GB RAM, a 25 GB thin-provisioned VMDK, VMXNET3, EFI and LVM. Guest login, SSH, package updates and `open-vm-tools` were verified.
-
-[Stage 2 deployment record](docs/stages/02-manual-infrastructure-baseline.md) includes the manual build parameters, validation evidence and Automation Candidate List.
-
-**Operational follow-up:** The Intel I219-LM management NIC remains under observation following recurring link failures ([INC-001](docs/incidents/INC-001-esxi-network-instability.md)).
-
----
-
-## Long-Term Target
-
-The final workflow will aim to demonstrate:
-
-```text
-Git
- ↓
-Automation Tooling
- ↓
-Terraform / PowerCLI
- ↓
-VMware API
- ↓
-VM Provisioned
- ↓
-Guest Configuration
- ↓
-Service Deployment
- ↓
-Automated Verification
-```
-
-The goal is a repeatable, documented infrastructure deployment process rather than a collection of unrelated automation exercises.
+The published files intentionally avoid private IP addresses, unique host naming, MAC addresses, serial numbers, exact physical hardware models and firmware revisions. Never commit secrets, credentials, exports with internal network details or real recovery keys. This is a personal lab, not employer infrastructure.
