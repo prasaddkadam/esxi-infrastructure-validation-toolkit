@@ -1,5 +1,5 @@
 
-# VMware Automation & Infrastructure-as-Code Lab
+# VMware ESXi Infrastructure Health & Validation Toolkit
 # Stage 3 - PowerCLI
 # Script: 03-Compare-NICHealth.ps1
 # Purpose: Compare two ESXi NIC health snapshots
