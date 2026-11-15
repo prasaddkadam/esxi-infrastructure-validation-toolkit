@@ -21,6 +21,45 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Fail early with a useful prerequisite message, before creating output folders.
+# Get-Command can trigger PowerShell module autoloading when available.
+$RequiredCommands = @(
+    'Connect-VIServer'
+    'Get-VM'
+    'Get-VMHost'
+    'Get-Datastore'
+    'Get-EsxCli'
+    'Get-VMHostNetworkAdapter'
+    'Get-VirtualSwitch'
+    'Get-VirtualPortGroup'
+)
+
+$Unavailable = @($RequiredCommands | Where-Object {
+    -not (Get-Command -Name $_ -ErrorAction SilentlyContinue)
+})
+
+if ($Unavailable.Count -gt 0) {
+    foreach ($ModuleName in @('VCF.PowerCLI', 'VMware.VimAutomation.Core')) {
+        if (Get-Module -ListAvailable -Name $ModuleName) {
+            try {
+                Import-Module -Name $ModuleName -ErrorAction Stop
+            }
+            catch {
+                Write-Verbose "Could not import $ModuleName : $($_.Exception.Message)"
+            }
+        }
+    }
+    $Unavailable = @($RequiredCommands | Where-Object {
+        -not (Get-Command -Name $_ -ErrorAction SilentlyContinue)
+    })
+}
+
+if ($Unavailable.Count -gt 0) {
+    throw ("VMware PowerCLI is not available in this PowerShell session. " +
+           "Missing command(s): $($Unavailable -join ', '). " +
+           "Install or import VCF.PowerCLI / VMware.VimAutomation.Core, then retry.")
+}
+
 if (-not $OutputDirectory) {
     $RepoRoot = Split-Path -Parent $PSScriptRoot
     $WorkspaceRoot = Split-Path -Parent $RepoRoot
