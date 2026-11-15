@@ -6,7 +6,8 @@
 # Operation: Read-only
 
 param(
-    [string]$ESXiServer = '192.168.0.41',
+    [Parameter(Mandatory = $true)]
+    [string]$ESXiServer,
     [string]$VMName = 'LINUX01'
 )
 
