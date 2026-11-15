@@ -48,7 +48,7 @@ Physical host manufacturer/model, hardware identifiers, exact capacity, manageme
 - PowerShell 7 and VMware PowerCLI on a management workstation
 - A reachable standalone ESXi host and permission for the required read-only API queries
 - An output directory writable by the PowerShell user
-- Review script prerequisites before running: baseline expectations are currently written for the example lab VM `LINUX01`
+- Review script prerequisites before running: baseline expected CPU, disk and network settings are currently tailored to one sample VM; supply its name at runtime
 
 The host address is provided **at runtime** and is not stored in the source files:
 
@@ -63,7 +63,8 @@ Connect-VIServer -Server $ESXiServer
 ./powercli/02-Get-ESXiHostHealth.ps1 -ESXiServer $ESXiServer
 ./powercli/03-Compare-NICHealth.ps1
 
-./powercli/04-Test-LabBaseline.ps1 -ESXiServer $ESXiServer
+$VMName = Read-Host 'Enter the lab VM name'
+./powercli/04-Test-LabBaseline.ps1 -ESXiServer $ESXiServer -VMName $VMName
 ./powercli/05-Get-LabReport.ps1
 ```
 
