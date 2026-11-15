@@ -17,13 +17,13 @@ A firmware update was applied to the physical host. Following the update, a 100 
 
 | Component | Configuration |
 |---|---|
-| Physical host | HP Pro Mini 400 G9 |
-| Processor | Intel Core i5-13500T |
+| Physical host | Dedicated x86 mini host (model withheld) |
+| Processor | Hybrid-core x86 processor (model withheld) |
 | Memory | 32 GB |
 | Hypervisor | VMware ESXi 8.0.3, build 24677879 |
-| Physical NIC | Intel I219-LM, 1 GbE |
+| Physical NIC | Onboard 1 GbE adapter (model withheld) |
 | ESXi NIC driver | `ne1000` 0.9.2 |
-| NIC firmware reported by ESXi | `2.5-4` |
+| NIC firmware reported by ESXi | Version withheld |
 | VMkernel management interface | `vmk0` |
 | Physical uplink | `vmnic0` |
 | Datastore | `datastore1`, VMFS-6 |
@@ -75,7 +75,7 @@ The investigation identified receive-side errors and physical link interruptions
 
 To distinguish a hardware problem from an ESXi-specific issue, the Mini PC was booted from an Ubuntu Live USB without modifying the ESXi installation.
 
-Ubuntu detected the same Intel I219-LM NIC using the Linux `e1000e` driver.
+Ubuntu detected the same onboard Gigabit Ethernet NIC NIC using the Linux `e1000e` driver.
 
 NIC counters were examined with:
 
@@ -97,7 +97,7 @@ This substantially reduced the likelihood of a persistent physical NIC, cable, s
 
 ## 5. Root Cause Assessment
 
-The evidence indicated an ESXi-specific network compatibility or firmware interaction involving the onboard Intel I219-LM adapter.
+The evidence indicated an ESXi-specific network compatibility or firmware interaction involving the onboard onboard Gigabit Ethernet NIC adapter.
 
 ESXi used the `ne1000` driver, whereas Ubuntu used `e1000e`.
 
@@ -107,13 +107,13 @@ However, the exact low-level defect was not conclusively identified. The investi
 
 ## 6. Remediation
 
-The HP system BIOS was upgraded:
+The host system BIOS was upgraded:
 
 | Property | Before | After |
 |---|---|---|
-| BIOS family | U23 | U23 |
-| BIOS version | 02.15.12 | 02.23.00 |
-| BIOS date | 3 September 2024 | 27 July 2026 |
+| BIOS family | Withheld | Withheld |
+| BIOS version | Earlier revision | Updated revision |
+| BIOS date | Withheld | Withheld |
 
 Prior to the update:
 
@@ -122,7 +122,7 @@ Prior to the update:
 - The ESXi encryption recovery key was securely saved outside the host.
 - Existing ESXi and firmware settings were considered for post-update verification.
 
-The update was performed using HP's built-in BIOS update utility.
+The update was performed using the built-in firmware update utility.
 
 ESXi subsequently booted successfully without reported startup problems.
 
