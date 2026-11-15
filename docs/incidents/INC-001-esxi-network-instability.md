@@ -75,7 +75,7 @@ The investigation identified receive-side errors and physical link interruptions
 
 To distinguish a hardware problem from an ESXi-specific issue, the Mini PC was booted from an Ubuntu Live USB without modifying the ESXi installation.
 
-Ubuntu detected the same onboard Gigabit Ethernet NIC NIC using the Linux `e1000e` driver.
+Ubuntu detected the same onboard Gigabit Ethernet NIC using the Linux `e1000e` driver.
 
 NIC counters were examined with:
 
@@ -97,7 +97,7 @@ This substantially reduced the likelihood of a persistent physical NIC, cable, s
 
 ## 5. Root Cause Assessment
 
-The evidence indicated an ESXi-specific network compatibility or firmware interaction involving the onboard onboard Gigabit Ethernet NIC adapter.
+The evidence indicated an ESXi-specific network compatibility or firmware interaction involving the onboard Gigabit Ethernet adapter.
 
 ESXi used the `ne1000` driver, whereas Ubuntu used `e1000e`.
 
@@ -163,12 +163,19 @@ The ESXi management connection successfully supported the transfers needed for V
 
 The Ubuntu Server ISO was uploaded to the datastore, and the rebuilt `LINUX01` subsequently passed guest login, SSH, package-update and VMware Tools verification. The initial deployment milestone is complete, but host network stability remains an open operational risk.
 
-## 10. Follow-up
+## 10. Automated evidence obtained on 10 November 2026
+
+The read-only PowerCLI collector and comparison scripts sampled the physical NIC twice and detected an increase of **37 receive-length errors** and **37 receive-missed errors**, with no increase in CRC errors or dropped packets for the comparison period. The consolidated report classified the NIC result as `WARNING`, while host resource, storage and baseline checks passed.
+
+These measurements show continued receive anomalies but cannot prove a physical link flap or identify the underlying defect. The incident stays open in **Monitoring**; do not state that the BIOS or power-management change permanently resolved it.
+
+## 11. Follow-up
 
 - Monitor `vmnic0` receive CRC, length and missed-error counters.
 - Monitor ESXi kernel logs for any recurrence of physical link drops.
 - Reassess NIC-driver compatibility if the issue returns.
-- Introduce automated host health checks in the future PowerCLI stage.
+- Continue using the implemented PowerCLI health snapshots and NIC-counter comparison tool to measure error increases.
+- Investigate any new physical link-down events separately; the CSV counters do not constitute continuous link monitoring.
 
 ---
 
