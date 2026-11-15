@@ -5,7 +5,8 @@
 # Purpose: Export read-only ESXi host-health information
 
 param(
-    [string]$ESXiServer = '192.168.0.41',
+    [Parameter(Mandatory = $true)]
+    [string]$ESXiServer,
     [string]$OutputDirectory
 )
 
