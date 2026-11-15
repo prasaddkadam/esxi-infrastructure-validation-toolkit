@@ -5,12 +5,12 @@
 # Purpose: Export ESXi virtual machine inventory to CSV
 # Operation: Read-only
 
-$ErrorActionPreference = 'Stop'
-
 param(
     [Parameter(Mandatory = $true)]
     [string]$ESXiServer
 )
+
+$ErrorActionPreference = 'Stop'
 
 # Establish connection if not already connected
 $Connection = $global:DefaultVIServers |
