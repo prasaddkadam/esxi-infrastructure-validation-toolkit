@@ -158,7 +158,3 @@ The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have be
 ## Finalisation scope
 
 The functionality and targeted reliability tests are complete. The final publication gates are review of sanitised examples and operating documentation, privacy review of older Git history, and release tagging. No additional hypervisor, VM deployment framework or commercial licensing is required for this read-only deliverable.
-
-## Privacy and security
-
-The published files intentionally avoid private IP addresses, unique host naming, MAC addresses, serial numbers, exact physical hardware models and firmware revisions. Never commit secrets, credentials, exports with internal network details or real recovery keys. This is a personal lab, not employer infrastructure.
