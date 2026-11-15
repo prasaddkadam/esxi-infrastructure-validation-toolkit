@@ -1,0 +1,5 @@
+Component,Metric,Value,Status,SourceTimestamp
+Host,Health report,Stale or invalid timestamp,UNKNOWN,2026-01-01 10:00:00
+Storage,Datastore report,Missing,UNKNOWN,
+Network,NIC comparison,Missing,UNKNOWN,
+Configuration,Baseline report,Missing,UNKNOWN,
