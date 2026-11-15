@@ -62,7 +62,7 @@ At initial validation, `df -h` showed approximately 4.7 GB used and 5.5 GB avail
 
 ## 4. Guest network and administration
 
-The guest virtual NIC was recognised as `ens34`, configured via DHCP. At verification it held `192.168.0.83/24`; this is a **temporary observed lease**, not a guaranteed static address.
+The guest virtual NIC was recognised as `ens34`, configured via DHCP. At verification it held `[guest IP redacted]`; this is a **temporary observed lease**, not a guaranteed static address.
 
 The management workstation successfully connected using:
 
@@ -104,9 +104,9 @@ The initial installation attempt failed while configuring APT (`apt-get update`,
 
 ## 7. Host networking caveat — INC-001
 
-After upgrading the physical host BIOS from U23 02.15.12 to 02.23.00, a 100 MB SCP transfer and full Ubuntu ISO upload succeeded. However, later guest installation activity coincided with renewed ESXi management interruptions, physical `vmnic0` link events, and increased error counters (including 415 cumulative CRC errors on one earlier sample).
+After upgrading the physical host BIOS from an earlier revision to [redacted], a 100 MB SCP transfer and full Ubuntu ISO upload succeeded. However, later guest installation activity coincided with renewed ESXi management interruptions, physical `vmnic0` link events, and increased error counters (including 415 cumulative CRC errors on one earlier sample).
 
-The HP BIOS setting **PCI Express Power Management** was subsequently disabled as a controlled experiment. The rebuilt Ubuntu VM installed successfully; in a later ESXi sample, CRC errors were zero, while receive length/missed errors were 38 each. This **does not yet establish a durable fix**. Continue monitoring and do not mark the NIC issue permanently resolved based only on the successful VM build.
+The host BIOS setting **PCI Express Power Management** was subsequently disabled as a controlled experiment. The rebuilt Ubuntu VM installed successfully; in a later ESXi sample, CRC errors were zero, while receive length/missed errors were 38 each. This **does not yet establish a durable fix**. Continue monitoring and do not mark the NIC issue permanently resolved based only on the successful VM build.
 
 See [INC-001 — ESXi Management Network Instability](../incidents/INC-001-esxi-network-instability.md).
 
