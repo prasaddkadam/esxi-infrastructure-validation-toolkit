@@ -1,5 +1,5 @@
 
-# VMware Automation & Infrastructure-as-Code Lab
+# VMware ESXi Infrastructure Health & Validation Toolkit
 # Stage 3 - Checkpoint 14
 # Script: 05-Get-LabReport.ps1
 # Purpose: Consolidate existing infrastructure health reports
