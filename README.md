@@ -13,9 +13,9 @@ A **read-only ESXi infrastructure audit and diagnostics project** built using Po
 | [03-Compare-NICHealth.ps1](powercli/03-Compare-NICHealth.ps1) | Compare NIC snapshots and identify error-counter increases | Detected a receive error increase |
 | [04-Test-LabBaseline.ps1](powercli/04-Test-LabBaseline.ps1) | Compare ESXi, networking, storage and VM settings against the lab baseline | 20/20 checks passed |
 | [05-Get-LabReport.ps1](powercli/05-Get-LabReport.ps1) | Consolidate latest available health and baseline data | Reported a network warning alongside passing checks |
-| [Invoke-ESXiAudit.ps1](powercli/Invoke-ESXiAudit.ps1) | Isolate and orchestrate all five scripts; reuse per-host NIC history | Implemented; awaiting live verification |
+| [Invoke-ESXiAudit.ps1](powercli/Invoke-ESXiAudit.ps1) | Isolate and orchestrate all five scripts; reuse per-host NIC history | Live PASS, WARNING and first-run UNKNOWN verified |
 
-The five original scripts have been tested individually. A [single-command audit runner](powercli/Invoke-ESXiAudit.ps1) is implemented on this feature branch and **requires live verification before release**. This is periodic snapshot analysis, **not** live monitoring.
+The five original scripts and [single-command audit runner](powercli/Invoke-ESXiAudit.ps1) were exercised in live lab audits. Controlled missing-data, stale-data, synthetic configuration failure, and PowerCLI dependency tests also passed. This is periodic snapshot analysis, **not** live monitoring.
 
 ## Architecture
 
@@ -66,7 +66,7 @@ For the **first run**, no previous NIC snapshot exists, so the network compariso
 
 The report remains a snapshot-based audit, not a continuously scheduled service. First-run and second-run integration testing passed on the personal lab.
 
-### Report freshness (F3 branch — awaiting verification)
+### Report freshness
 
 The consolidated reporting script now treats host, storage, and current NIC samples older than 60 minutes (by source timestamp) as `UNKNOWN`. A stale or malformed baseline filename is also marked `UNKNOWN`. Historical NIC comparison timestamps may be older; only the current NIC sample is subject to the report freshness threshold.
 
@@ -74,7 +74,7 @@ The consolidated reporting script now treats host, storage, and current NIC samp
 ./powercli/05-Get-LabReport.ps1 -OutputDirectory $TestDir -MaxReportAgeMinutes 60
 ```
 
-This change has not yet been verified in the user's Windows environment.
+The 60-minute source freshness check was verified using stale CSV test data, valid synthetic failure data and a subsequent live audit.
 
 ### Individual scripts
 
@@ -96,7 +96,7 @@ $VMName = Read-Host 'Enter the lab VM name'
 ./powercli/05-Get-LabReport.ps1
 ```
 
-Scripts write CSVs into the `output/` folder alongside the local repository workspace (not committed). Use measured timestamps when interpreting a report: the consolidated script does not yet enforce snapshot age.
+By default the scripts write CSVs outside the cloned repository in the sibling workspace `output/` directory. The consolidator validates source freshness, but reports remain discrete samples rather than continuous monitoring.
 
 ## Real diagnostic investigation: INC-001
 
@@ -120,6 +120,11 @@ The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have be
 .
 ├── README.md
 ├── .gitignore
+├── examples/
+│   ├── audit-PASS.csv
+│   ├── audit-WARNING.csv
+│   ├── audit-FAIL.csv
+│   └── audit-UNKNOWN.csv
 ├── powercli/
 │   ├── 01-Get-VMInventory.ps1
 │   ├── 02-Get-ESXiHostHealth.ps1
@@ -130,6 +135,7 @@ The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have be
 └── docs/
     ├── design-decisions.md
     ├── project-log.md
+    ├── operator-guide.md
     ├── troubleshooting.md
     ├── incidents/
     │   └── INC-001-esxi-network-instability.md
@@ -142,6 +148,8 @@ The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have be
 
 - [Design decisions](docs/design-decisions.md)
 - [Project log](docs/project-log.md)
+- [Operator guide](docs/operator-guide.md)
+- [Sanitised sample outputs](examples/)
 - [NIC compatibility investigation](docs/incidents/INC-001-esxi-network-instability.md)
 - [Platform foundation](docs/stages/01-platform-foundation.md)
 - [Manual VM baseline](docs/stages/02-manual-infrastructure-baseline.md)
@@ -149,7 +157,7 @@ The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have be
 
 ## Finalisation scope
 
-Remaining work: live verification of the audit runner, additional robust handling of missing/stale data, reproducible checks, sanitised sample output and an operating guide. No additional hypervisor, VM deployment framework or commercial licensing is required for the planned read-only deliverable.
+The functionality and targeted reliability tests are complete. The final publication gates are review of sanitised examples and operating documentation, privacy review of older Git history, and release tagging. No additional hypervisor, VM deployment framework or commercial licensing is required for this read-only deliverable.
 
 ## Privacy and security
 

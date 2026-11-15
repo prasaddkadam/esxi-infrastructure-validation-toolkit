@@ -1,0 +1,7 @@
+Component,Metric,Value,Status,SourceTimestamp
+Host,Connection,Connected,PASS,2026-11-15 03:05:40
+Host,CpuUsedPct,0.25%,PASS,2026-11-15 03:05:40
+Host,MemoryUsedPct,6.17%,PASS,2026-11-15 03:05:40
+Storage,datastore1,4.82% used,PASS,2026-11-15 03:05:40
+Network,vmnic0 error delta,NO_NEW_ERRORS; CRC=0; Length=0; Missed=0,PASS,2026-11-15 03:05:40
+Configuration,Baseline checks,20 passed; 0 failed,PASS,2026-11-15 03:05:40

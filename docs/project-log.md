@@ -189,3 +189,26 @@ Finish the existing working engineering deliverables as a focused **VMware ESXi 
 ### Remaining work
 
 Finalise a one-command read-only audit runner, input/staleness checks, a small test/evidence package and operating instructions. This project does not claim VM provisioning or real-time monitoring. Older Git commits can still contain prior metadata; current-file redaction is not a rewrite of historical commits.
+
+## 2026-11-15 — Single-command audit and reliability verification
+
+### Implemented
+
+- Added `Invoke-ESXiAudit.ps1` to execute the five existing scripts in isolated per-run directories.
+- Scoped previous NIC snapshots to the current ESXi host so unrelated runs cannot be compared.
+- Added a freshness check to the consolidated report and deterministic timestamp-based input selection.
+- Added an early PowerCLI prerequisite check.
+
+### Verified
+
+- First live audit: baseline 20/20 PASS; no prior NIC snapshot, therefore overall UNKNOWN.
+- Second live audit: +2 length and +2 missed NIC errors; overall WARNING.
+- Later live audit: +3 length and +3 missed NIC errors; overall WARNING.
+- Subsequent live audit: no new monitored NIC errors; overall PASS, with baseline 20/20 PASS.
+- Synthetic tests: missing inputs correctly UNKNOWN; expired host timestamp UNKNOWN; vCPU mismatch FAIL; missing PowerCLI reports an actionable prerequisite error without contacting ESXi.
+
+### Follow-up
+
+- Keep physical NIC incident INC-001 under monitoring; a green snapshot does not prove permanent remediation.
+- Publish only sanitised sample evidence and operator instructions.
+- Review older Git commits for prior identifiers before claiming the full public repository history is anonymous.
