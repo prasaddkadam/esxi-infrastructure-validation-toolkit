@@ -7,7 +7,10 @@
 
 $ErrorActionPreference = 'Stop'
 
-$ESXiServer = '192.168.0.41'
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$ESXiServer
+)
 
 # Establish connection if not already connected
 $Connection = $global:DefaultVIServers |
