@@ -1,5 +1,5 @@
 
-# VMware Automation & IaC Lab
+# VMware ESXi Infrastructure Health & Validation Toolkit
 # Stage 3 - PowerCLI
 # Script: 01-Get-VMInventory.ps1
 # Purpose: Export ESXi virtual machine inventory to CSV
