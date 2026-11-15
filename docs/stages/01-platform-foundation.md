@@ -2,7 +2,7 @@
 
 ## Objective
 
-Establish a stable VMware ESXi platform on dedicated physical hardware before deploying virtual machines or introducing infrastructure automation.
+Establish a standalone VMware ESXi platform on dedicated physical hardware, later used for manual guest deployment and read-only PowerCLI infrastructure auditing.
 
 The stage focused on:
 
@@ -66,17 +66,7 @@ A separate personal laptop is used as the management and automation workstation.
               vmk0
 ```
 
-The management workstation will later host:
-
-- PowerShell
-- VMware PowerCLI
-- Terraform
-- Git
-- VS Code
-- Docker
-- Ansible
-- Packer
-- SSH tooling
+The management workstation hosts PowerShell, VMware PowerCLI, Git, VS Code and SSH tooling. Other planned IaC tools were not implemented in this project.
 
 This keeps automation tooling separate from the ESXi host.
 
@@ -651,7 +641,7 @@ Before creating the first VM, the following VMware components were identified an
 | VMware Tools | Guest integration software |
 | Snapshot | Temporary VM state/rollback mechanism |
 
-These concepts form the objects that later PowerCLI and Terraform automation will manage.
+These concepts form the infrastructure objects inspected by the implemented PowerCLI scripts.
 
 ---
 
@@ -807,11 +797,7 @@ Remote Administration
 Validated Platform
 ```
 
-No virtual machines have yet been deployed.
-
-This is intentional.
-
-The next stage establishes the manual VM deployment baseline so that the exact operations involved in virtual-machine provisioning can later be automated.
+At the end of Stage 1 no virtual machines had yet been deployed. Stage 2 subsequently established the first guest VM, and the repository later introduced read-only PowerCLI discovery and health reporting.
 
 ---
 
@@ -819,7 +805,7 @@ The next stage establishes the manual VM deployment baseline so that the exact o
 
 ## Stage 2 — Manual Infrastructure Baseline
 
-The next milestone is to create the first virtual machine manually.
+The next milestone at the time was manual deployment of the first virtual machine (subsequently completed in Stage 2).
 
 The deployment will record:
 
@@ -837,6 +823,4 @@ The deployment will record:
 - Guest installation
 - VMware Tools
 
-Each manual action will then be added to an **Automation Candidate List**.
-
-That list will become the starting point for the later PowerCLI automation stage.
+The deployment parameters informed the later PowerCLI inventory and baseline validation scripts. API write-based provisioning was excluded after the free ESXi license limitation was verified; see [Design Decisions](../design-decisions.md).
