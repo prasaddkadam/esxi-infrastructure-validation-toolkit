@@ -159,8 +159,9 @@ if ($ComparisonFile) {
             default { 'UNKNOWN' }
         }
 
-        if (-not (Test-FreshTimestamp -Timestamp $NIC.CurrentTimestamp) -or
-            -not (Test-FreshTimestamp -Timestamp $NIC.PreviousTimestamp)) {
+        # The current snapshot must be fresh; the historical NIC snapshot
+        # may legitimately be older than the freshness threshold.
+        if (-not (Test-FreshTimestamp -Timestamp $NIC.CurrentTimestamp)) {
             $Status = 'UNKNOWN'
         }
 
