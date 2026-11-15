@@ -1,5 +1,5 @@
 
-# VMware Automation & Infrastructure-as-Code Lab
+# VMware ESXi Infrastructure Health & Validation Toolkit
 # Stage 3 - Checkpoint 12
 # Script: 04-Test-LabBaseline.ps1
 # Purpose: Validate ESXi and VM configuration
