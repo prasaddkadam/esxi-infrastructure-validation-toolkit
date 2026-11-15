@@ -31,35 +31,39 @@ function Get-LatestReport {
     $Files = @(Get-ChildItem -LiteralPath $OutputDirectory -Filter $Pattern -File)
     if ($Files.Count -eq 0) { return $null }
 
-    # Sort by a valid timestamp, not raw filename. For example, a legacy
-    # *-TEST.csv fixture sorts alphabetically after *-20261115-023837.csv.
     $Prefix = $Pattern.Substring(0, $Pattern.IndexOf('*'))
+    $Formats = [string[]]@('yyyyMMdd-HHmmss', 'yyyyMMdd-HHmmss-fff')
     $Culture = [System.Globalization.CultureInfo]::InvariantCulture
-    $Formats = @('yyyyMMdd-HHmmss', 'yyyyMMdd-HHmmss-fff')
-    $ParsedFiles = @(
-        foreach ($File in $Files) {
-            if (-not $File.BaseName.StartsWith($Prefix, [StringComparison]::OrdinalIgnoreCase)) {
-                continue
-            }
-            $Suffix = $File.BaseName.Substring($Prefix.Length)
-            $Parsed = [datetime]::MinValue
-            $Valid = [datetime]::TryParseExact(
-                $Suffix, $Formats, $Culture,
-                [System.Globalization.DateTimeStyles]::None, [ref]$Parsed
-            )
-            if ($Valid) {
-                [PSCustomObject]@{ File = $File; Timestamp = $Parsed }
-            }
-        }
-    )
+    $Style = [System.Globalization.DateTimeStyles]::None
+    $LatestFile = $null
+    $LatestTime = [datetime]::MinValue
 
-    if ($ParsedFiles.Count -gt 0) {
-        return ($ParsedFiles | Sort-Object Timestamp -Descending |
-            Select-Object -First 1).File
+    foreach ($Candidate in $Files) {
+        if (-not $Candidate.BaseName.StartsWith($Prefix, [StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
+
+        $Suffix = $Candidate.BaseName.Substring($Prefix.Length)
+        $Parsed = [datetime]::MinValue
+        $IsValid = [datetime]::TryParseExact(
+            $Suffix, $Formats, $Culture, $Style, [ref]$Parsed
+        )
+
+        if ($IsValid -and $Parsed -gt $LatestTime) {
+            $LatestFile = $Candidate
+            $LatestTime = $Parsed
+        }
     }
 
-    # Preserve explicit UNKNOWN handling when only malformed filenames exist.
-    return ($Files | Sort-Object Name -Descending | Select-Object -First 1)
+    if ($LatestFile) {
+        Write-Verbose "Selected $($LatestFile.Name) for $Pattern"
+        return $LatestFile
+    }
+
+    # If only malformed filenames exist, preserve UNKNOWN handling.
+    $InvalidFile = $Files | Sort-Object Name -Descending | Select-Object -First 1
+    Write-Verbose "No timestamped report for $Pattern; using invalid $($InvalidFile.Name)"
+    return $InvalidFile
 }
 
 function Add-Result {
@@ -89,7 +93,7 @@ function Test-FreshTimestamp {
 
     $Parsed = [datetime]::MinValue
     $Culture = [System.Globalization.CultureInfo]::InvariantCulture
-    $Formats = @('yyyy-MM-dd HH:mm:ss', 'yyyyMMdd-HHmmss', 'yyyyMMdd-HHmmss-fff')
+    $Formats = [string[]]@('yyyy-MM-dd HH:mm:ss', 'yyyyMMdd-HHmmss', 'yyyyMMdd-HHmmss-fff')
     $Style = [System.Globalization.DateTimeStyles]::None
     if (-not [datetime]::TryParseExact($Timestamp, $Formats, $Culture, $Style, [ref]$Parsed)) {
         return $false
