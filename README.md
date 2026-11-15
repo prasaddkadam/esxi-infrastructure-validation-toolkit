@@ -47,6 +47,7 @@ Physical host manufacturer/model, hardware identifiers, exact capacity, manageme
 ### Prerequisites
 
 - PowerShell 7 and VMware PowerCLI on a management workstation
+- The audit runner checks that the required PowerCLI commands are available before beginning; if PowerCLI cannot be loaded it stops with an actionable prerequisite error
 - A reachable standalone ESXi host and permission for the required read-only API queries
 - An output directory writable by the PowerShell user
 - Review script prerequisites before running: baseline expected CPU, disk and network settings are currently tailored to one sample VM; supply its name at runtime
