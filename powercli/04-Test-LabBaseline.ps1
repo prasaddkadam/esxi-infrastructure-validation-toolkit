@@ -9,7 +9,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$ESXiServer,
     [Parameter(Mandatory = $true)]
-    [string]$VMName
+    [string]$VMName,
+    [string]$OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,7 +18,9 @@ $ErrorActionPreference = 'Stop'
 # Save reports outside the Git repository
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 $WorkspaceRoot = Split-Path $RepoRoot -Parent
-$OutputDirectory = Join-Path $WorkspaceRoot 'output'
+if (-not $OutputDirectory) {
+    $OutputDirectory = Join-Path $WorkspaceRoot 'output'
+}
 
 New-Item -ItemType Directory -Path $OutputDirectory -Force |
     Out-Null
