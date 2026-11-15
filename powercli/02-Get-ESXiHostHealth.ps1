@@ -1,5 +1,5 @@
 
-# VMware Automation & Infrastructure-as-Code Lab
+# VMware ESXi Infrastructure Health & Validation Toolkit
 # Stage 3 - PowerCLI
 # Script: 02-Get-ESXiHostHealth.ps1
 # Purpose: Export read-only ESXi host-health information
