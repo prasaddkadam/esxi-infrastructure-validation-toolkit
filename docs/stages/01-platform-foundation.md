@@ -27,14 +27,14 @@ The objective was deliberately limited to the infrastructure foundation. No prod
 
 | Component | Specification |
 |---|---|
-| Platform | HP PC |
-| CPU | Intel Core i5-13500T |
-| CPU Topology | 14 cores / 20 threads |
+| Platform | lab host |
+| CPU | hybrid-core x86 processor |
+| CPU Topology | Hybrid performance/efficiency cores (exact topology withheld) |
 | Architecture | Intel hybrid P-core / E-core |
-| Memory | 32 GB DDR4-3200 |
-| Memory Configuration | 2 × 16 GB |
-| Storage | 256 GB Samsung NVMe SSD |
-| Network Adapter | Intel I219-LM 1 GbE |
+| Memory | Installed lab RAM (capacity withheld) |
+| Memory Configuration | DIMM details withheld |
+| Storage | Local NVMe SSD (model/capacity withheld) |
+| Network Adapter | Onboard Gigabit Ethernet (model withheld) |
 | Hypervisor | VMware ESXi 8 |
 
 The host is dedicated to the VMware lab.
@@ -55,7 +55,7 @@ A separate personal laptop is used as the management and automation workstation.
                   Home Network
                         │
                         ▼
-                      HP PC
+                      lab host
                         │
                    VMware ESXi
                         │
@@ -97,8 +97,8 @@ These settings allow ESXi to use the CPU's hardware virtualisation capabilities 
 
 ### Firmware Maintenance
 
-During subsequent network troubleshooting, the HP Pro Mini 400 G9
-BIOS was upgraded from U23 02.15.12 to U23 02.23.00.
+During subsequent network troubleshooting, the dedicated lab host
+BIOS was upgraded from an earlier revision to an updated revision.
 
 The update followed successful cross-OS network testing and
 was performed after securing ESXi configuration recovery material.
@@ -111,7 +111,7 @@ See [INC-001](../incidents/INC-001-esxi-network-instability.md).
 
 # ESXi Installation
 
-VMware ESXi 8 was installed directly onto the HP Mini PC as a bare-metal Type-1 hypervisor.
+VMware ESXi 8 was installed directly onto the lab host as a bare-metal Type-1 hypervisor.
 
 The installation path was:
 
@@ -125,7 +125,7 @@ Internal NVMe SSD
 VMware ESXi
 ```
 
-The internal Samsung NVMe device was selected as the installation target.
+The internal local NVMe device was selected as the installation target.
 
 ESXi subsequently created its system storage and VMFS datastore structure on the device.
 
@@ -135,7 +135,7 @@ ESXi subsequently created its system storage and VMFS datastore structure on the
 
 The first attempt to start the ESXi installer failed before ESXi itself loaded.
 
-The HP firmware displayed:
+The system firmware displayed:
 
 ```text
 Selected boot image did not authenticate
@@ -163,7 +163,7 @@ The error included:
 Fatal CPU mismatch on feature "Cores per package"
 ```
 
-The Intel Core i5-13500T uses a hybrid CPU architecture containing both Performance cores and Efficiency cores.
+The hybrid-core x86 processor uses a hybrid CPU architecture containing both Performance cores and Efficiency cores.
 
 ESXi detected differences between the CPU core types during its CPU uniformity check.
 
@@ -200,9 +200,9 @@ The default ESXi hostname was replaced with a dedicated lab identity.
 Configured values:
 
 ```text
-Hostname: esxi01
-Domain:   home.arpa
-FQDN:     esxi01.home.arpa
+Hostname: <ESXI_HOSTNAME>
+Domain:   lab.example
+FQDN:     <ESXI_FQDN>
 ```
 
 The configuration was verified using:
@@ -217,7 +217,7 @@ This established a predictable naming standard before additional infrastructure 
 
 # Management Networking
 
-The host currently uses the onboard Intel Ethernet controller.
+The host currently uses the onboard onboard Ethernet controller.
 
 ESXi identified the physical network adapter as:
 
@@ -228,7 +228,7 @@ vmnic0
 The adapter was validated as:
 
 ```text
-Intel I219-LM
+onboard Gigabit Ethernet NIC
 Driver: ne1000
 Link: 1 Gbps
 Duplex: Full
@@ -424,7 +424,7 @@ Successful
 ### External Network Connectivity
 
 ```bash
-vmkping 8.8.8.8
+vmkping <PUBLIC_DNS_IP>
 ```
 
 Result:
@@ -479,7 +479,7 @@ esxcli network ip dns server list
 The DNS search domain is:
 
 ```text
-home.arpa
+lab.example
 ```
 
 verified using:
@@ -488,7 +488,7 @@ verified using:
 esxcli network ip dns search list
 ```
 
-The `home.arpa` domain provides a suitable namespace for the internal lab environment.
+The `lab.example` domain provides a suitable namespace for the internal lab environment.
 
 A dedicated internal DNS service may be introduced later when the Windows infrastructure lab is created.
 
@@ -550,7 +550,7 @@ A valid upstream NTP source was selected successfully.
 
 # Storage
 
-The physical storage device is a Samsung 256 GB NVMe SSD.
+The physical storage device is a local SSD (model/capacity withheld).
 
 The device was inspected using:
 
@@ -562,7 +562,7 @@ ESXi identified the device as:
 
 ```text
 Local NVMe Disk
-Samsung MZVL4256HBJD
+[device model redacted]
 SSD: true
 ```
 
@@ -591,12 +591,12 @@ esxcli storage filesystem list
 The physical disk currently contains approximately:
 
 ```text
-256 GB NVMe
+NVMe (capacity withheld)
 │
 ├── ESXi system storage
 ├── ESX-OSData
 └── datastore1
-      ~118 GB VMFS
+      VMFS datastore (size withheld)
 ```
 
 The relatively limited datastore capacity influenced the decision to use:
