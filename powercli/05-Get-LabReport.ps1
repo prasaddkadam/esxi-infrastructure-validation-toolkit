@@ -6,7 +6,9 @@
 # Operation: Read-only; processes CSV reports
 
 param(
-    [string]$OutputDirectory
+    [string]$OutputDirectory,
+    [ValidateRange(1, 10080)]
+    [int]$MaxReportAgeMinutes = 60
 )
 
 $ErrorActionPreference = 'Stop'
@@ -49,6 +51,35 @@ function Add-Result {
     })
 }
 
+# Reject report timestamps that are old, in the future, or malformed.
+# Filename timestamps are used for baseline CSV because that format has no Timestamp column.
+function Test-FreshTimestamp {
+    param([string]$Timestamp)
+
+    if ([string]::IsNullOrWhiteSpace($Timestamp)) { return $false }
+
+    $Parsed = [datetime]::MinValue
+    $Culture = [System.Globalization.CultureInfo]::InvariantCulture
+    $Formats = @('yyyy-MM-dd HH:mm:ss', 'yyyyMMdd-HHmmss', 'yyyyMMdd-HHmmss-fff')
+    $Style = [System.Globalization.DateTimeStyles]::None
+    if (-not [datetime]::TryParseExact($Timestamp, $Formats, $Culture, $Style, [ref]$Parsed)) {
+        return $false
+    }
+
+    $Age = (Get-Date) - $Parsed
+    return ($Age.TotalMinutes -ge -2 -and $Age.TotalMinutes -le $MaxReportAgeMinutes)
+}
+
+function Test-FreshFilename {
+    param(
+        [System.IO.FileInfo]$File,
+        [string]$Prefix
+    )
+    if (-not $File) { return $false }
+    $Suffix = $File.BaseName.Substring($Prefix.Length)
+    return (Test-FreshTimestamp -Timestamp $Suffix)
+}
+
 # Identify newest reports
 $HostFile = Get-LatestReport 'ESXi-HostHealth-*.csv'
 $StorageFile = Get-LatestReport 'ESXi-DatastoreHealth-*.csv'
@@ -65,6 +96,10 @@ if ($HostFile) {
         throw "Host report is empty: $($HostFile.Name)"
     }
 
+    if (-not (Test-FreshTimestamp -Timestamp $HostHealth.Timestamp)) {
+        Add-Result 'Host' 'Health report' 'Stale or invalid timestamp' 'UNKNOWN' $HostHealth.Timestamp
+    }
+    else {
     $ConnectionStatus = if (
         $HostHealth.ConnectionState -eq 'Connected'
     ) { 'PASS' } else { 'FAIL' }
@@ -80,6 +115,7 @@ if ($HostFile) {
         Add-Result 'Host' $Metric "$Value%" $Status `
             $HostHealth.Timestamp
     }
+    }
 }
 else {
     Add-Result 'Host' 'Health report' 'Missing' 'UNKNOWN' ''
@@ -90,11 +126,20 @@ if ($StorageFile) {
     $Datastores = @(Import-Csv $StorageFile.FullName)
 
     foreach ($Datastore in $Datastores) {
-        $UsedPct = [double]$Datastore.UsedPct
-        $Status = if ($UsedPct -ge 80) { 'WARNING' } else { 'PASS' }
+        if (-not (Test-FreshTimestamp -Timestamp $Datastore.Timestamp)) {
+            Add-Result 'Storage' $Datastore.Name 'Stale or invalid timestamp' 'UNKNOWN' $Datastore.Timestamp
+            continue
+        }
+        $UsedPctValue = 0.0
+        if (-not [double]::TryParse($Datastore.UsedPct, [ref]$UsedPctValue) -or
+            $UsedPctValue -lt 0 -or $UsedPctValue -gt 100) {
+            Add-Result 'Storage' $Datastore.Name 'Invalid utilisation value' 'UNKNOWN' $Datastore.Timestamp
+            continue
+        }
+        $Status = if ($UsedPctValue -ge 80) { 'WARNING' } else { 'PASS' }
 
         Add-Result 'Storage' $Datastore.Name `
-            "$UsedPct% used; $($Datastore.FreeGB) GB free" `
+            "$UsedPctValue% used; $($Datastore.FreeGB) GB free" `
             $Status $Datastore.Timestamp
     }
 }
@@ -112,6 +157,11 @@ if ($ComparisonFile) {
             'WARNING' { 'WARNING' }
             'RESET_OR_WRAP' { 'WARNING' }
             default { 'UNKNOWN' }
+        }
+
+        if (-not (Test-FreshTimestamp -Timestamp $NIC.CurrentTimestamp) -or
+            -not (Test-FreshTimestamp -Timestamp $NIC.PreviousTimestamp)) {
+            $Status = 'UNKNOWN'
         }
 
         # Ensure comparison corresponds to latest NIC snapshot
@@ -151,7 +201,10 @@ if ($BaselineFile) {
         $Baseline | Where-Object Status -notin @('PASS', 'FAIL')
     )
 
-    $Status = if ($Failures.Count -gt 0) {
+    $Status = if (-not (Test-FreshFilename -File $BaselineFile -Prefix 'ESXi-Baseline-')) {
+        'UNKNOWN'
+    }
+    elseif ($Failures.Count -gt 0) {
         'FAIL'
     }
     elseif ($Baseline.Count -eq 0 -or $Unexpected.Count -gt 0) {
@@ -161,11 +214,17 @@ if ($BaselineFile) {
         'PASS'
     }
 
+    $BaselineDetail = if ($Status -eq 'UNKNOWN' -and
+        -not (Test-FreshFilename -File $BaselineFile -Prefix 'ESXi-Baseline-')) {
+        'Stale or invalid baseline timestamp'
+    } else { "$($Passes.Count) passed; $($Failures.Count) failed" }
+
     Add-Result 'Configuration' 'Baseline checks' `
-        "$($Passes.Count) passed; $($Failures.Count) failed" `
+        $BaselineDetail `
         $Status $BaselineFile.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')
 
     foreach ($Failure in $Failures) {
+        if ($Status -eq 'UNKNOWN') { continue }
         Add-Result 'Configuration' $Failure.Component `
             "Expected=$($Failure.Expected); Actual=$($Failure.Actual)" `
             'FAIL' $BaselineFile.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss')
