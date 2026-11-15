@@ -13,8 +13,9 @@ A **read-only ESXi infrastructure audit and diagnostics project** built using Po
 | [03-Compare-NICHealth.ps1](powercli/03-Compare-NICHealth.ps1) | Compare NIC snapshots and identify error-counter increases | Detected a receive error increase |
 | [04-Test-LabBaseline.ps1](powercli/04-Test-LabBaseline.ps1) | Compare ESXi, networking, storage and VM settings against the lab baseline | 20/20 checks passed |
 | [05-Get-LabReport.ps1](powercli/05-Get-LabReport.ps1) | Consolidate latest available health and baseline data | Reported a network warning alongside passing checks |
+| [Invoke-ESXiAudit.ps1](powercli/Invoke-ESXiAudit.ps1) | Isolate and orchestrate all five scripts; reuse per-host NIC history | Implemented; awaiting live verification |
 
-Scripts are individually tested. A one-command runner, input-hardening and example evidence are planned for the final release; they have **not** been implemented yet. This is periodic snapshot analysis, **not** live monitoring.
+The five original scripts have been tested individually. A [single-command audit runner](powercli/Invoke-ESXiAudit.ps1) is implemented on this feature branch and **requires live verification before release**. This is periodic snapshot analysis, **not** live monitoring.
 
 ## Architecture
 
@@ -49,6 +50,22 @@ Physical host manufacturer/model, hardware identifiers, exact capacity, manageme
 - A reachable standalone ESXi host and permission for the required read-only API queries
 - An output directory writable by the PowerShell user
 - Review script prerequisites before running: baseline expected CPU, disk and network settings are currently tailored to one sample VM; supply its name at runtime
+
+### Recommended: run one audit
+
+The newly added runner is read-only and generates a separate directory for each run:
+
+```powershell
+$ESXiServer = Read-Host 'Enter the ESXi hostname or IP'
+$VMName = Read-Host 'Enter the VM name to validate'
+./powercli/Invoke-ESXiAudit.ps1 -ESXiServer $ESXiServer -VMName $VMName
+```
+
+For the **first run**, no previous NIC snapshot exists, so the network comparison reports `UNKNOWN` rather than inventing a clean result. Subsequent runs compare with this host's prior completed snapshot when it is less than 48 hours old. Each run creates its own folder under the workspace `output/runs/` directory; its latest NIC snapshot is preserved under `output/history/`. Both directories are outside source control by default. The script does not modify the hypervisor.
+
+The report remains a snapshot-based audit, not a continuously scheduled service. The runner is awaiting live integration testing.
+
+### Individual scripts
 
 The host address is provided **at runtime** and is not stored in the source files:
 
@@ -97,7 +114,8 @@ The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have be
 │   ├── 02-Get-ESXiHostHealth.ps1
 │   ├── 03-Compare-NICHealth.ps1
 │   ├── 04-Test-LabBaseline.ps1
-│   └── 05-Get-LabReport.ps1
+│   ├── 05-Get-LabReport.ps1
+│   └── Invoke-ESXiAudit.ps1
 └── docs/
     ├── design-decisions.md
     ├── project-log.md
@@ -120,7 +138,7 @@ The lab uses **vSphere 8 Hypervisor (Free)**. Read-only PowerCLI queries have be
 
 ## Finalisation scope
 
-Remaining work: a parameterised audit runner, robust handling of missing/stale data, reproducible checks, sanitised sample output and an operating guide. No additional hypervisor, VM deployment framework or commercial licensing is required for the planned read-only deliverable.
+Remaining work: live verification of the audit runner, additional robust handling of missing/stale data, reproducible checks, sanitised sample output and an operating guide. No additional hypervisor, VM deployment framework or commercial licensing is required for the planned read-only deliverable.
 
 ## Privacy and security
 
