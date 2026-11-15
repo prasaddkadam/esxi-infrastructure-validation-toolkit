@@ -2,7 +2,7 @@
 
 ## Objective
 
-Deploy and verify the first virtual machine manually on the existing standalone ESXi host. Record the infrastructure objects and guest configuration so later PowerCLI and Infrastructure-as-Code work can target a known-good baseline rather than rebuilding a second lab.
+Deploy and verify the first virtual machine manually on the existing standalone ESXi host. Record the infrastructure and guest configuration as a baseline for supported read-only PowerCLI inventory, configuration validation and diagnostics.
 
 **Milestone date:** 9 November 2026  
 **VM:** `LINUX01`  
@@ -104,37 +104,30 @@ The initial installation attempt failed while configuring APT (`apt-get update`,
 
 ## 7. Host networking caveat — INC-001
 
-After upgrading the physical host BIOS from an earlier revision to [redacted], a 100 MB SCP transfer and full Ubuntu ISO upload succeeded. However, later guest installation activity coincided with renewed ESXi management interruptions, physical `vmnic0` link events, and increased error counters (including 415 cumulative CRC errors on one earlier sample).
+After updating the physical host BIOS from an earlier to a newer revision, a 100 MB SCP transfer and full Ubuntu ISO upload succeeded. However, later guest installation activity coincided with renewed ESXi management interruptions, physical `vmnic0` link events, and increased error counters (including 415 cumulative CRC errors on one earlier sample).
 
 The host BIOS setting **PCI Express Power Management** was subsequently disabled as a controlled experiment. The rebuilt Ubuntu VM installed successfully; in a later ESXi sample, CRC errors were zero, while receive length/missed errors were 38 each. This **does not yet establish a durable fix**. Continue monitoring and do not mark the NIC issue permanently resolved based only on the successful VM build.
 
 See [INC-001 — ESXi Management Network Instability](../incidents/INC-001-esxi-network-instability.md).
 
-## 8. Automation candidate list
+## 8. Read-only audit and configuration candidates
 
-These manual tasks are candidates for later repeatable PowerCLI / API / IaC workflows:
+The manual installation established objects that could be inspected by PowerCLI:
 
-| Manual action | Potential automation |
+| Infrastructure component | Implemented read-only check |
 |---|---|
-| Select datastore and create VM | PowerCLI VM provisioning |
-| Assign vCPU, RAM and guest OS | Parameterised VM specification |
-| Attach 25 GB thin VMDK | Declarative disk configuration |
-| Select VMXNET3 and port group | Standardised VM network configuration |
-| Set EFI firmware / secure-boot policy | VM configuration baseline |
-| Attach installation ISO | PowerCLI media management |
-| Install guest OS and initial account | Unattended install / cloud-init (future) |
-| Enable SSH and guest tools | Configuration management (Ansible) |
-| Validate IP, SSH, Tools and disk | Automated health checks |
-| Record results | Generate machine-readable deployment evidence |
+| VM resources | Inventory of VM name, vCPU, RAM and power state |
+| Virtual disk | Validate configured size and thin provisioning |
+| Virtual networking | Inspect virtual NIC type and port group |
+| Datastore | Inspect type, capacity and free space |
+| ESXi host | Capture CPU/memory and physical NIC counters |
+| Expected VM configuration | Compare current values with a documented baseline |
+| Repeated health samples | Calculate NIC error-counter changes |
 
-**Design boundary:** PowerCLI/Terraform provision or manage VM infrastructure; Ansible/cloud-init configure the guest. Terraform provider support for a standalone ESXi host must be validated before selecting a provisioning implementation.
+These capabilities were implemented and tested in the five PowerCLI scripts under [`powercli/`](../../powercli/). They do **not** create, power on or modify virtual machines via the restricted vSphere API.
 
-## 9. Stage outcome and next steps
+## 9. Stage outcome
 
-**First VM manual deployment: complete.** The initial working Linux guest now exists on the same platform that will later be automated.
+**Manual Linux VM deployment: completed and verified.** A subsequent licensing check identified that the assigned free ESXi license blocks PowerCLI API write operations. The deliverable was therefore narrowed to read-only infrastructure auditing, monitoring snapshots and configuration validation.
 
-Next steps:
-1. Continue observing host NIC link events and receive error deltas.
-2. Introduce SSH keys and clarify guest IP reservation/naming.
-3. Capture repeatable VM inventory/configuration through PowerCLI.
-4. Evaluate provider/API capabilities before Terraform implementation.
+The earlier deployment details in this stage are retained as the historical lab baseline. The physical NIC fault remains in monitoring: [INC-001](../incidents/INC-001-esxi-network-instability.md). See [DD-006 and DD-007](../design-decisions.md) for the later project scope decision.
