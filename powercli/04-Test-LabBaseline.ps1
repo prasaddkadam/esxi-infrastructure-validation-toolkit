@@ -8,7 +8,8 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$ESXiServer,
-    [string]$VMName = 'LINUX01'
+    [Parameter(Mandatory = $true)]
+    [string]$VMName
 )
 
 $ErrorActionPreference = 'Stop'
@@ -104,31 +105,31 @@ foreach ($PGName in @('VM Network', 'Management Network')) {
 # 4. Virtual machine
 $VM = Get-VM -Name $VMName -Server $Connection -ErrorAction SilentlyContinue
 
-Add-BaselineCheck 'LINUX01 Exists' 'True' ([string][bool]$VM)
+Add-BaselineCheck "$VMName Exists" 'True' ([string][bool]$VM)
 
 if ($VM) {
 
-    Add-BaselineCheck 'LINUX01 vCPU' '2' ([string]$VM.NumCpu)
-    Add-BaselineCheck 'LINUX01 RAM (GB)' '2' ([string]$VM.MemoryGB)
+    Add-BaselineCheck "$VMName vCPU" '2' ([string]$VM.NumCpu)
+    Add-BaselineCheck "$VMName RAM (GB)" '2' ([string]$VM.MemoryGB)
 
     # Validate virtual disk
     $Disks = @($VM | Get-HardDisk)
 
-    Add-BaselineCheck 'LINUX01 Disk Count' '1' ([string]$Disks.Count)
+    Add-BaselineCheck "$VMName Disk Count" '1' ([string]$Disks.Count)
 
     if ($Disks.Count -eq 1) {
-        Add-BaselineCheck 'LINUX01 Disk (GB)' '25' ([string]$Disks[0].CapacityGB)
-        Add-BaselineCheck 'LINUX01 Disk Format' 'Thin' ([string]$Disks[0].StorageFormat)
+        Add-BaselineCheck "$VMName Disk (GB)" '25' ([string]$Disks[0].CapacityGB)
+        Add-BaselineCheck "$VMName Disk Format" 'Thin' ([string]$Disks[0].StorageFormat)
     }
 
     # Validate virtual NIC
     $Adapters = @($VM | Get-NetworkAdapter)
 
-    Add-BaselineCheck 'LINUX01 NIC Count' '1' ([string]$Adapters.Count)
+    Add-BaselineCheck "$VMName NIC Count" '1' ([string]$Adapters.Count)
 
     if ($Adapters.Count -eq 1) {
-        Add-BaselineCheck 'LINUX01 NIC Type' 'Vmxnet3' ([string]$Adapters[0].Type)
-        Add-BaselineCheck 'LINUX01 Network' 'VM Network' ([string]$Adapters[0].NetworkName)
+        Add-BaselineCheck "$VMName NIC Type" 'Vmxnet3' ([string]$Adapters[0].Type)
+        Add-BaselineCheck "$VMName Network" 'VM Network' ([string]$Adapters[0].NetworkName)
     }
 }
 
