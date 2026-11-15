@@ -1,0 +1,6 @@
+Component,Metric,Value,Status,SourceTimestamp
+Host,Health report,Missing,UNKNOWN,
+Storage,Datastore report,Missing,UNKNOWN,
+Network,NIC comparison,Missing,UNKNOWN,
+Configuration,Baseline checks,1 passed; 1 failed,FAIL,2026-11-15 03:05:40
+Configuration,Test VM vCPU,Expected=2; Actual=4,FAIL,2026-11-15 03:05:40
