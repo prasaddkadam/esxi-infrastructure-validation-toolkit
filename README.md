@@ -63,7 +63,17 @@ $VMName = Read-Host 'Enter the VM name to validate'
 
 For the **first run**, no previous NIC snapshot exists, so the network comparison reports `UNKNOWN` rather than inventing a clean result. Subsequent runs compare with this host's prior completed snapshot when it is less than 48 hours old. Each run creates its own folder under the workspace `output/runs/` directory; its latest NIC snapshot is preserved under `output/history/`. Both directories are outside source control by default. The script does not modify the hypervisor.
 
-The report remains a snapshot-based audit, not a continuously scheduled service. The runner is awaiting live integration testing.
+The report remains a snapshot-based audit, not a continuously scheduled service. First-run and second-run integration testing passed on the personal lab.
+
+### Report freshness (F3 branch — awaiting verification)
+
+The consolidated reporting script now treats host, storage, and current NIC samples older than 60 minutes (by source timestamp) as `UNKNOWN`. A stale or malformed baseline filename is also marked `UNKNOWN`. Historical NIC comparison timestamps may be older; only the current NIC sample is subject to the report freshness threshold.
+
+```powershell
+./powercli/05-Get-LabReport.ps1 -OutputDirectory $TestDir -MaxReportAgeMinutes 60
+```
+
+This change has not yet been verified in the user's Windows environment.
 
 ### Individual scripts
 
