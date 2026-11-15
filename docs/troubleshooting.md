@@ -8,7 +8,7 @@ This document records significant technical issues encountered while building th
 
 ### Symptom
 
-The HP firmware displayed:
+The system firmware displayed:
 
 > Selected boot image did not authenticate.
 
@@ -42,7 +42,7 @@ During ESXi startup the host generated a PSOD containing:
 
 ### Hardware
 
-Intel Core i5-13500T.
+hybrid-core x86 processor.
 
 ### Cause
 
@@ -76,9 +76,9 @@ connection experienced repeated failures under sustained inbound traffic.
 Investigation included physical network isolation, NIC statistics,
 kernel log analysis and Ubuntu Live cross-platform testing.
 
-Updating the HP U23 BIOS from 02.15.12 to 02.23.00 was followed by
+Updating the host BIOS from [redacted] to [redacted] was followed by
 successful 100 MB SCP and Ubuntu Server ISO transfers.
 
-During the first Ubuntu VM installation, ESXi management interruptions recurred and cumulative NIC statistics showed 415 CRC errors and repeated physical link flaps. The HP BIOS **PCI Express Power Management** setting was then disabled for testing. The rebuilt VM subsequently installed successfully, but a durable NIC fix has not yet been demonstrated. The precise underlying defect remains unconfirmed.
+During the first Ubuntu VM installation, ESXi management interruptions recurred and cumulative NIC statistics showed 415 CRC errors and repeated physical link flaps. The host BIOS **PCI Express Power Management** setting was then disabled for testing. The rebuilt VM subsequently installed successfully, but a durable NIC fix has not yet been demonstrated. The precise underlying defect remains unconfirmed.
 
 **Full report:** [INC-001 — ESXi Network Instability](incidents/INC-001-esxi-network-instability.md)
