@@ -41,7 +41,7 @@ if (-not $HostVM) {
 }
 
 $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-$FileTimestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$FileTimestamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
 
 # 1. CPU and memory
 $HostHealth = [PSCustomObject]@{
