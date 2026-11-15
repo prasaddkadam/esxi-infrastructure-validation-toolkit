@@ -19,7 +19,7 @@ A firmware update was applied to the physical host. Following the update, a 100 
 |---|---|
 | Physical host | Dedicated x86 mini host (model withheld) |
 | Processor | Hybrid-core x86 processor (model withheld) |
-| Memory | 32 GB |
+| Memory | Installed RAM (capacity withheld) |
 | Hypervisor | VMware ESXi 8.0.3, build 24677879 |
 | Physical NIC | Onboard 1 GbE adapter (model withheld) |
 | ESXi NIC driver | `ne1000` 0.9.2 |
